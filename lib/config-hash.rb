@@ -23,32 +23,19 @@ class ConfigHash < Hash
     end
   end
 
-  def self.setup(*list)
-    new.reload!(*list)
-  end
-
   def initialize(hash=nil)
     super()
-    @root = $APP_ROOT || File.expand_path(File.dirname(caller[0]))
     merge!(hash) if hash
   end
 
-  def reload!(*list)
-    clear unless empty?
-    list.each_with_index do |glob, deep|
-      next unless glob
-      Dir[File.join(@root, glob)].each do |path|
-        path = File.expand_path(path)
-        data = ConfigHash.load(path)
-        keys = path.split("/")[(-1 - deep)..-2].join("/") if deep > 0
-        deep == 0 ? merge!(data) : (self[keys] = data)
-      end
+  def import(root, glob)
+    root = File.expand_path(root)
+    Dir[File.join(root, glob)].each do |path|
+      keys = File.dirname(path[(root.size + 1)..-1])
+      data = ConfigHash.load(path)
+      self[keys] = data
     end
     self
-  end
-
-  def key?(key)
-    super(key.to_s)
   end
 
   def [](key)
@@ -95,6 +82,10 @@ class ConfigHash < Hash
   end
 
   alias store []=
+
+  def key?(key)
+    super(key.to_s)
+  end
 
   def merge!(other_hash)
     raise ArgumentError unless Hash === other_hash
