@@ -16,6 +16,7 @@ class ConfigHash < Hash
   SEPARATORS = %r|[./]|
 
   def self.load(path="config.rb", var="config")
+    path = File.expand_path(path)
     eval <<-"end", binding, path, 0
       #{var} ||= new
       #{IO.read(path, encoding: 'utf-8') if File.exists?(path)}
@@ -30,8 +31,9 @@ class ConfigHash < Hash
 
   def import(root, glob)
     root = File.expand_path(root)
+    pref = root.size + 1
     Dir[File.join(root, glob)].each do |path|
-      keys = File.dirname(path[(root.size + 1)..-1])
+      keys = File.dirname(path[pref..-1])
       data = ConfigHash.load(path)
       self[keys] = data
     end
