@@ -9,6 +9,10 @@ end
 class ConfigHash < Hash
   SEPARATORS ||= %r|[./]|
 
+  def self.[](hash=nil)
+    new(hash)
+  end
+
   def self.load(path="config.rb", var="config")
     path = File.expand_path(path)
     eval <<-"end", binding, path, 0
@@ -20,7 +24,7 @@ class ConfigHash < Hash
 
   def initialize(hash=nil)
     super()
-    merge!(hash) if hash
+    update(hash) if hash
   end
 
   def import(root, glob)
@@ -34,22 +38,22 @@ class ConfigHash < Hash
     self
   end
 
+  def key?(key)
+    super(key.to_s)
+  end
+
   def [](key)
+    our = self.class
     key = key.to_s
-    if !key?(key) && key =~ SEPARATORS
-      val = self
-      key.split(SEPARATORS).each do |tag|
-        if !val.instance_of?(self.class)
-          return super(key)
-        elsif val.key?(tag)
-          val = val[tag]
-        elsif tag == "*" && val.size == 1
-          val = val[val.keys.first]
-        else
-          return super(key)
+
+    if !key?(key) && key =~ SEPARATORS && (ary = key.split SEPARATORS)
+      val = ary.inject(self) do |obj, sub|
+        if not our === obj  then return super(key)
+        elsif obj.key?(sub) then obj[sub]
+        elsif sub == "*"    then obj[obj.keys.first]
+        else                     return super(key)
         end
       end
-      val
     else
       super(key)
     end
@@ -59,55 +63,37 @@ class ConfigHash < Hash
     our = self.class
     key = key.to_s
     val = our.new(val) if val.instance_of?(Hash)
-    if val.instance_of?(NormalHash)
-      super(key, val)
-    elsif key =~ SEPARATORS
-      all = key.split(SEPARATORS)
-      key = all.pop
-      top = all.inject(self) do |top, tag|
-        if top.key?(tag) && (try = top[tag]).instance_of?(our)
-          top = try
-        else
-          top = top[tag] = our.new
-        end
+
+    if !key?(key) && key =~ SEPARATORS && (ary = key.split SEPARATORS)
+      key = ary.pop
+      obj = ary.inject(self) do |obj, sub|
+        obj.key?(sub) && our === (try = obj[sub]) ? try : (obj[sub] = our.new)
       end
-      top[key] = val
+      obj[key] = val
     else
       super(key, val)
     end
   end
 
-  alias store []=
+  alias_method :store, :[]=
 
-  def key?(key)
-    super(key.to_s)
-  end
-
-  def merge!(other_hash)
-    raise ArgumentError unless Hash === other_hash
-    other_hash.each do |k, v|
-      if block_given? && key?(k)
-        self[k] = yield(k, self[k], v)
-      else
-        self[k] = v
-      end
-    end
+  def update(hash)
+    raise ArgumentError unless Hash === hash
+    hash.each {|key, val| self[key] = val}
     self
   end
 
-  alias update merge!
+  alias_method :merge!, :update
 
   def to_hash
     Hash[self]
   end
 
-  def method_missing(sym, *args, &block)
-    if sym =~ /=$/
-      self[$`] = args.first
-    elsif args.empty?
-      self[sym]
-    else
-      super
+  def method_missing(name, *args, &code)
+    case
+      when name =~ /=$/ then self[$`] = args.first
+      when args.empty?  then self[name]
+      else super
     end
   end
 end
