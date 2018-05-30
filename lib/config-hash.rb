@@ -1,5 +1,3 @@
-Encoding.default_external = "UTF-8"
-
 class Hash
   def -@; NormalHash[self]; end
   def +@; ConfigHash[self]; end
