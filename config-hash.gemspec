@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = "config-hash"
-  s.version     = "0.6.0"
+  s.version     = "0.7.0"
   s.author      = "Steve Shreeve"
   s.email       = "steve.shreeve@gmail.com"
   s.summary     = "A safe, homoiconic, Ruby hash supporting dot notation"
