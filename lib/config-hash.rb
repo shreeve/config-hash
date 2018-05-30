@@ -1,19 +1,15 @@
 Encoding.default_external = "UTF-8"
 
 class Hash
-  def -@
-    NormalHash.new.merge!(self)
-  end
-  def +@
-    ConfigHash.new(self)
-  end
+  def -@; NormalHash[self]; end
+  def +@; ConfigHash[self]; end
 end
 
 class NormalHash < Hash
 end
 
 class ConfigHash < Hash
-  SEPARATORS = %r|[./]|
+  SEPARATORS ||= %r|[./]|
 
   def self.load(path="config.rb", var="config")
     path = File.expand_path(path)
@@ -110,7 +106,7 @@ class ConfigHash < Hash
   def method_missing(sym, *args, &block)
     if sym =~ /=$/
       self[$`] = args.first
-    elsif args.empty? # or... key?(sym)
+    elsif args.empty?
       self[sym]
     else
       super
