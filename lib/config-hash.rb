@@ -3,11 +3,20 @@ class Hash
   def +@; ConfigHash[self]; end
 end
 
+class Array
+  def keys
+    +Hash[zip]
+  end
+end
+
 class NormalHash < Hash
 end
 
 class ConfigHash < Hash
   SEPARATORS ||= %r|[./]|
+
+  # remove likely collisions
+  undef_method :zip
 
   def self.[](hash=nil)
     new(hash)
@@ -36,6 +45,10 @@ class ConfigHash < Hash
       self[keys] = data
     end
     self
+  end
+
+  def zip!(*args)
+    +Hash[keys.zip(*args)]
   end
 
   def key?(key)
