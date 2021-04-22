@@ -3,20 +3,11 @@ class Hash
   def +@; ConfigHash[self]; end
 end
 
-class Array
-  def keys
-    +Hash[zip]
-  end
-end
-
 class NormalHash < Hash
 end
 
 class ConfigHash < Hash
   SEPARATORS ||= %r|[./]|
-
-  # remove likely collisions
-  undef_method :zip
 
   def self.[](hash=nil)
     new(hash)
@@ -45,10 +36,6 @@ class ConfigHash < Hash
       self[keys] = data
     end
     self
-  end
-
-  def zip!(*args)
-    +Hash[keys.zip(*args)]
   end
 
   def key?(key)
@@ -88,15 +75,12 @@ class ConfigHash < Hash
     end
   end
 
-  alias_method :store, :[]=
-
   def update(hash)
     raise ArgumentError unless Hash === hash
     hash.each {|key, val| self[key] = val}
     self
   end
 
-  alias_method :merge!, :update
 
   def to_hash
     Hash[self]
