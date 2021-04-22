@@ -75,12 +75,16 @@ class ConfigHash < Hash
     end
   end
 
-  def update(hash)
+  def update(hash, nuke=false)
     raise ArgumentError unless Hash === hash
+    clear if nuke
     hash.each {|key, val| self[key] = val}
     self
   end
 
+  def update!(hash)
+    update(hash, true)
+  end
 
   def to_hash
     Hash[self]
