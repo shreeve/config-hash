@@ -33,7 +33,7 @@ class ConfigHash < Hash
     Dir[File.join(root, glob)].sort.each do |path|
       info = File.dirname(path[pref...])
       data = ConfigHash.load(path)
-      self[keys] = data
+      info == '.' ? update(data) : (self[info] = data)
     end
     self
   end
