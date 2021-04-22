@@ -30,8 +30,8 @@ class ConfigHash < Hash
   def import(root, glob)
     root = File.expand_path(root)
     pref = root.size + 1
-      keys = File.dirname(path[pref..-1])
     Dir[File.join(root, glob)].sort.each do |path|
+      info = File.dirname(path[pref...])
       data = ConfigHash.load(path)
       self[keys] = data
     end
