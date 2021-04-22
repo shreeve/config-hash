@@ -13,13 +13,15 @@ class ConfigHash < Hash
     new(hash)
   end
 
-  def self.load(path="config.rb", var="config")
+  def self.load(path="config.rb", list=nil, name: "config")
     path = File.expand_path(path)
-    eval <<~"end", binding, path, 0
-      #{var} ||= new
+    data = eval <<~"end", binding, path, 0
+      #{name} ||= new
       #{IO.read(path, encoding: 'utf-8') if File.readable?(path)}
-      #{var}
+      #{name}
     end
+    data.load(*list) if list && !list.empty?
+    data
   end
 
   def initialize(hash=nil)
@@ -27,13 +29,17 @@ class ConfigHash < Hash
     update(hash) if hash
   end
 
-  def import(root, glob)
-    root = File.expand_path(root)
-    pref = root.size + 1
-    Dir[File.join(root, glob)].sort.each do |path|
-      info = File.dirname(path[pref...])
-      data = ConfigHash.load(path)
-      info == '.' ? update(data) : (self[info] = data)
+  def load(*list)
+    [list].each do |root, glob|
+      root = File.expand_path(root)
+      pref = root.size + 1
+      full = File.join([root, glob].compact)
+      list = Dir[full].sort {|a,b| [a.count('/'), a] <=> [b.count('/'), b]}
+      list.each do |path|
+        info = File.dirname(path[pref...] || '')
+        data = ConfigHash.load(path)
+        info == '.' ? update(data) : (self[info] = data)
+      end
     end
     self
   end
