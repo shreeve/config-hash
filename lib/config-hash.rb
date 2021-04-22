@@ -17,7 +17,7 @@ class ConfigHash < Hash
     path = File.expand_path(path)
     eval <<~"end", binding, path, 0
       #{var} ||= new
-      #{IO.read(path, encoding: 'utf-8') if File.exists?(path)}
+      #{IO.read(path, encoding: 'utf-8') if File.readable?(path)}
       #{var}
     end
   end
