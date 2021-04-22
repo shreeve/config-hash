@@ -15,7 +15,7 @@ class ConfigHash < Hash
 
   def self.load(path="config.rb", var="config")
     path = File.expand_path(path)
-    eval <<-"end", binding, path, 0
+    eval <<~"end", binding, path, 0
       #{var} ||= new
       #{IO.read(path, encoding: 'utf-8') if File.exists?(path)}
       #{var}
