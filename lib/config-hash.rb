@@ -9,6 +9,9 @@ end
 class ConfigHash < Hash
   SEPARATORS ||= %r|[./]|
 
+  # allow "obj.zip" (for a zip code, etc.)
+  undef_method :zip
+
   def self.[](hash=nil)
     new(hash)
   end
